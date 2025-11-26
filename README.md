@@ -81,7 +81,7 @@ cd trading-strategy-simulator
 2. 設定環境變數
 ```bash
 cp .env.example .env
-# 編輯 .env 檔案，設定必要的環境變數
+# 編輯 .env 檔案,設定必要的環境變數
 ```
 
 3. 啟動所有服務

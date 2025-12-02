@@ -6,7 +6,7 @@
 const API_BASE_URL = 'http://localhost:8000';
 
 // API 錯誤處理
-class APIError extends Error {
+export class APIError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'APIError';

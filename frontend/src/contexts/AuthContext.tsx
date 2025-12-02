@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, APIError } from '../services/api';
 
 interface User {
   id: number;
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const userData = await authAPI.getCurrentUser(savedToken);
           setUser(userData);
         } catch (error) {
-          console.error('Failed to load user:', error);
+          console.error('載入使用者資訊失敗：', error);
           localStorage.removeItem('auth_token');
           setToken(null);
         }
@@ -54,9 +54,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(response.access_token);
       setUser(response.user);
       localStorage.setItem('auth_token', response.access_token);
-    } catch (error: any) {
-      console.error('Login failed:', error);
-      throw new Error(error.response?.data?.detail || 'Login failed');
+    } catch (error: unknown) {
+      console.error('登入失敗：', error);
+      if (error instanceof APIError) {
+        throw new Error(error.message);
+      }
+      if (error instanceof Error) {
+        throw new Error(error.message || '登入失敗，請稍後再試');
+      }
+      throw new Error('登入失敗，請稍後再試');
     }
   };
 
@@ -65,9 +71,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authAPI.register(username, email, password, fullName);
       // After registration, automatically login
       await login(username, password);
-    } catch (error: any) {
-      console.error('Registration failed:', error);
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+    } catch (error: unknown) {
+      console.error('註冊失敗：', error);
+      if (error instanceof APIError) {
+        throw new Error(error.message);
+      }
+      if (error instanceof Error) {
+        throw new Error(error.message || '註冊失敗，請稍後再試');
+      }
+      throw new Error('註冊失敗，請稍後再試');
     }
   };
 

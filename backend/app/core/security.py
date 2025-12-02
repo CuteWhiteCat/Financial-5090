@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 import bcrypt
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from fastapi import HTTPException, status
+from jose import JWTError, ExpiredSignatureError, jwt
 
 # Passlib expects bcrypt.__about__.__version__ (removed in bcrypt>=4.1), so shim it.
 if not hasattr(bcrypt, "__about__"):
@@ -70,5 +71,17 @@ def decode_access_token(token: str) -> Optional[dict]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
+    except ExpiredSignatureError:
+        # Token 已過期
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token 已過期，請重新登入",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except JWTError:
-        return None
+        # Token 無效
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token 無效，請重新登入",
+            headers={"WWW-Authenticate": "Bearer"},
+        )

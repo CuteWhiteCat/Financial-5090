@@ -86,23 +86,23 @@ async def get_current_user(
     db = Depends(get_db)
 ):
     """獲取當前登入用戶"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
     payload = decode_access_token(token)
-    if payload is None:
-        raise credentials_exception
 
     username: str = payload.get("sub")
     if username is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token 無效，缺少使用者資訊，請重新登入",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = get_user_by_username(db, username)
     if user is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="使用者不存在或已被刪除，請重新登入",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     return user
 
@@ -115,14 +115,14 @@ async def register(user: UserCreate, db = Depends(get_db)):
         if get_user_by_username(db, user.username):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already registered"
+                detail="用戶名已存在，請更換用戶名"
             )
 
         # 檢查郵箱是否已存在
         if get_user_by_email(db, user.email):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="Email 已被註冊，請改用其他 Email"
             )
 
         # 創建新用戶

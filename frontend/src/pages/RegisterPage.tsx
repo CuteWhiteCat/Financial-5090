@@ -14,10 +14,17 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { APIError } from '../services/api';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+
+  const isValidEmail = (email: string) => {
+    // 實用的 email 格式檢查（基本符號與長度）
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   const [formData, setFormData] = useState({
     username: '',
@@ -28,6 +35,7 @@ const RegisterPage: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +44,13 @@ const RegisterPage: React.FC = () => {
       [e.target.name]: e.target.value,
     });
     setError('');
+    if (e.target.name === 'email') {
+      setEmailError(
+        e.target.value && !isValidEmail(e.target.value)
+          ? '請輸入有效的 Email 格式'
+          : ''
+      );
+    }
   };
 
   const validateForm = () => {
@@ -49,9 +64,9 @@ const RegisterPage: React.FC = () => {
       return false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('請輸入有效的郵箱地址');
+    if (!isValidEmail(formData.email)) {
+      setEmailError('請輸入有效的 Email 格式');
+      setError('請輸入有效的 Email 格式');
       return false;
     }
 
@@ -76,8 +91,14 @@ const RegisterPage: React.FC = () => {
         formData.fullName || undefined
       );
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || '註冊失敗，請稍後再試');
+    } catch (err: unknown) {
+      if (err instanceof APIError) {
+        setError(err.message);
+      } else if (err instanceof Error) {
+        setError(err.message || '註冊失敗，請稍後再試');
+      } else {
+        setError('註冊失敗，請稍後再試');
+      }
     } finally {
       setLoading(false);
     }
@@ -123,6 +144,8 @@ const RegisterPage: React.FC = () => {
             margin="normal"
             required
             autoComplete="email"
+            error={!!emailError}
+            helperText={emailError || '請輸入有效的 Email 地址'}
           />
 
           <TextField

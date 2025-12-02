@@ -14,16 +14,9 @@ import RegisterPage from './pages/RegisterPage';
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
-      main: '#90caf9',
-    },
-    secondary: {
-      main: '#f48fb1',
-    },
-    background: {
-      default: '#0a1929',
-      paper: '#1e1e1e',
-    },
+    primary: { main: '#6ab8ff', light: '#9cd3ff' },
+    secondary: { main: '#f48fb1' },
+    background: { default: '#0b1020', paper: '#11182f' },
   },
   components: {
     MuiButton: {
@@ -49,7 +42,14 @@ function App() {
       <CssBaseline />
       <Router>
         <AuthProvider>
-          <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
+          <Box
+            sx={{
+              minHeight: '100vh',
+              background:
+                'radial-gradient(circle at 20% 20%, #1e2a4a 0, #0b1020 35%), radial-gradient(circle at 80% 0%, #0d4b8f 0, #0b1020 45%)',
+              color: 'common.white',
+            }}
+          >
             <Navbar />
             <Routes>
               {/* 公開路由 */}

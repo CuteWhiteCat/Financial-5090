@@ -99,12 +99,19 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        mt: 4,
+        mb: 4,
+        color: 'white',
+      }}
+    >
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom fontWeight={700}>
           歡迎回來，{user?.username || '用戶'}！
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="rgba(255,255,255,0.7)">
           這是您的投資策略儀表板
         </Typography>
       </Box>
@@ -123,9 +130,12 @@ const Dashboard: React.FC = () => {
               sx={{
                 background: `linear-gradient(135deg, ${stat.color}33 0%, ${stat.color}11 100%)`,
                 height: '100%',
-                transition: 'transform 0.2s',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(10px)',
                 '&:hover': {
-                  transform: 'translateY(-4px)',
+                  transform: 'translateY(-6px)',
+                  boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
                 },
               }}
             >
@@ -151,7 +161,16 @@ const Dashboard: React.FC = () => {
       </Grid>
 
       {/* 快速操作 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper
+        sx={{
+          p: 3,
+          mb: 3,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(8px)',
+          color: 'white',
+        }}
+      >
         <Typography variant="h6" gutterBottom>
           快速開始
         </Typography>
@@ -192,7 +211,15 @@ const Dashboard: React.FC = () => {
       </Paper>
 
       {/* 最近策略 */}
-      <Paper sx={{ p: 3 }}>
+      <Paper
+        sx={{
+          p: 3,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(8px)',
+          color: 'white',
+        }}
+      >
         <Typography variant="h6" gutterBottom>
           最近的策略
         </Typography>
@@ -204,14 +231,13 @@ const Dashboard: React.FC = () => {
                 sx={{
                   p: 2,
                   mb: 2,
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  borderRadius: 2,
+                  border: '1px solid rgba(255,255,255,0.08)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   '&:hover': {
-                    bgcolor: 'action.hover',
+                    bgcolor: 'rgba(255,255,255,0.05)',
                   },
                 }}
               >

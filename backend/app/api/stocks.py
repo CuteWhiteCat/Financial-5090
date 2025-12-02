@@ -3,35 +3,26 @@
 """
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict
-import sqlite3
+from psycopg2.extras import RealDictCursor
 from ..core.database import get_db
 
 router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 
 
 @router.get("/", response_model=List[Dict])
-async def get_stocks(db: sqlite3.Connection = Depends(get_db)):
+async def get_stocks(db = Depends(get_db)):
     """取得所有股票清單"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT symbol, name, exchange, industry, sector, is_active
             FROM stocks
-            WHERE is_active = 1
+            WHERE is_active = TRUE
             ORDER BY symbol
         """)
 
-        stocks = []
-        for row in cursor.fetchall():
-            stocks.append({
-                'symbol': row[0],
-                'name': row[1],
-                'exchange': row[2],
-                'industry': row[3],
-                'sector': row[4],
-                'is_active': row[5] == 1
-            })
-
+        stocks = cursor.fetchall()
+        cursor.close()
         return stocks
 
     except Exception as e:
@@ -39,27 +30,23 @@ async def get_stocks(db: sqlite3.Connection = Depends(get_db)):
 
 
 @router.get("/{symbol}")
-async def get_stock_detail(symbol: str, db: sqlite3.Connection = Depends(get_db)):
+async def get_stock_detail(symbol: str, db = Depends(get_db)):
     """取得股票詳細資訊"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT symbol, name, exchange, industry, sector
             FROM stocks
-            WHERE symbol = ? AND is_active = 1
+            WHERE symbol = %s AND is_active = TRUE
         """, (symbol,))
 
         row = cursor.fetchone()
+        cursor.close()
+
         if not row:
             raise HTTPException(status_code=404, detail="股票不存在")
 
-        return {
-            'symbol': row[0],
-            'name': row[1],
-            'exchange': row[2],
-            'industry': row[3],
-            'sector': row[4]
-        }
+        return row
 
     except HTTPException:
         raise
@@ -72,41 +59,33 @@ async def get_stock_prices(
     symbol: str,
     start_date: str = None,
     end_date: str = None,
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """取得股票歷史價格"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
 
         query = """
-            SELECT date, open, high, low, close, volume
+            SELECT date::text as date, open, high, low, close, volume
             FROM stock_prices
-            WHERE symbol = ?
+            WHERE symbol = %s
         """
         params = [symbol]
 
         if start_date:
-            query += " AND date >= ?"
+            query += " AND date >= %s"
             params.append(start_date)
 
         if end_date:
-            query += " AND date <= ?"
+            query += " AND date <= %s"
             params.append(end_date)
 
         query += " ORDER BY date ASC"
 
         cursor.execute(query, params)
 
-        prices = []
-        for row in cursor.fetchall():
-            prices.append({
-                'date': row[0],
-                'open': row[1],
-                'high': row[2],
-                'low': row[3],
-                'close': row[4],
-                'volume': row[5]
-            })
+        prices = cursor.fetchall()
+        cursor.close()
 
         return {
             'symbol': symbol,

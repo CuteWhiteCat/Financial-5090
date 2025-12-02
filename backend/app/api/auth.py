@@ -5,8 +5,8 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-import sqlite3
 from datetime import timedelta
+from psycopg2.extras import RealDictCursor
 
 from ..core.database import get_db
 from ..core.security import (
@@ -53,31 +53,37 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-def get_user_by_username(db: sqlite3.Connection, username: str):
+def get_user_by_username(db, username: str):
     """根據用戶名獲取用戶"""
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
-        SELECT id, username, email, hashed_password, full_name, is_active, created_at
+        SELECT id, username, email, hashed_password, full_name, is_active,
+               created_at::text as created_at
         FROM users
-        WHERE username = ?
+        WHERE username = %s
     """, (username,))
-    return cursor.fetchone()
+    result = cursor.fetchone()
+    cursor.close()
+    return result
 
 
-def get_user_by_email(db: sqlite3.Connection, email: str):
+def get_user_by_email(db, email: str):
     """根據郵箱獲取用戶"""
-    cursor = db.cursor()
+    cursor = db.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
-        SELECT id, username, email, hashed_password, full_name, is_active, created_at
+        SELECT id, username, email, hashed_password, full_name, is_active,
+               created_at::text as created_at
         FROM users
-        WHERE email = ?
+        WHERE email = %s
     """, (email,))
-    return cursor.fetchone()
+    result = cursor.fetchone()
+    cursor.close()
+    return result
 
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """獲取當前登入用戶"""
     credentials_exception = HTTPException(
@@ -102,7 +108,7 @@ async def get_current_user(
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user: UserCreate, db: sqlite3.Connection = Depends(get_db)):
+async def register(user: UserCreate, db = Depends(get_db)):
     """用戶註冊"""
     try:
         # 檢查用戶名是否已存在
@@ -120,27 +126,20 @@ async def register(user: UserCreate, db: sqlite3.Connection = Depends(get_db)):
             )
 
         # 創建新用戶
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         hashed_password = get_password_hash(user.password)
 
         cursor.execute("""
             INSERT INTO users (username, email, hashed_password, full_name)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, username, email, full_name, is_active, created_at::text as created_at
         """, (user.username, user.email, hashed_password, user.full_name))
 
+        new_user = cursor.fetchone()
+        cursor.close()
         db.commit()
 
-        # 獲取新創建的用戶
-        new_user = get_user_by_username(db, user.username)
-
-        return UserResponse(
-            id=new_user[0],
-            username=new_user[1],
-            email=new_user[2],
-            full_name=new_user[4],
-            is_active=bool(new_user[5]),
-            created_at=new_user[6]
-        )
+        return UserResponse(**new_user)
 
     except HTTPException:
         raise
@@ -155,14 +154,14 @@ async def register(user: UserCreate, db: sqlite3.Connection = Depends(get_db)):
 @router.post("/login", response_model=Token)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """用戶登入"""
     # 獲取用戶
     user = get_user_by_username(db, form_data.username)
 
     # 驗證用戶和密碼
-    if not user or not verify_password(form_data.password, user[3]):
+    if not user or not verify_password(form_data.password, user['hashed_password']):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -170,7 +169,7 @@ async def login(
         )
 
     # 檢查用戶是否啟用
-    if not user[5]:  # is_active
+    if not user['is_active']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user"
@@ -179,7 +178,7 @@ async def login(
     # 創建access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user[1]},  # username
+        data={"sub": user['username']},
         expires_delta=access_token_expires
     )
 
@@ -187,12 +186,12 @@ async def login(
         access_token=access_token,
         token_type="bearer",
         user=UserResponse(
-            id=user[0],
-            username=user[1],
-            email=user[2],
-            full_name=user[4],
-            is_active=bool(user[5]),
-            created_at=user[6]
+            id=user['id'],
+            username=user['username'],
+            email=user['email'],
+            full_name=user['full_name'],
+            is_active=user['is_active'],
+            created_at=user['created_at']
         )
     )
 
@@ -201,12 +200,12 @@ async def login(
 async def get_current_user_info(current_user = Depends(get_current_user)):
     """獲取當前用戶信息"""
     return UserResponse(
-        id=current_user[0],
-        username=current_user[1],
-        email=current_user[2],
-        full_name=current_user[4],
-        is_active=bool(current_user[5]),
-        created_at=current_user[6]
+        id=current_user['id'],
+        username=current_user['username'],
+        email=current_user['email'],
+        full_name=current_user['full_name'],
+        is_active=current_user['is_active'],
+        created_at=current_user['created_at']
     )
 
 

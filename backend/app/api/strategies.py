@@ -5,7 +5,7 @@ Strategy API endpoints - With user authentication
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
-import sqlite3
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 
 from ..core.database import get_db
@@ -95,23 +95,27 @@ class StrategyResponse(BaseModel):
 @router.get("/", response_model=List[StrategyResponse])
 async def get_strategies(
     current_user = Depends(get_current_user),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Get all strategies for current user"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
-            SELECT * FROM strategies
-            WHERE user_id = ?
+            SELECT id, user_id, name, description, strategy_type, initial_capital,
+                   short_period, long_period,
+                   rsi_period, rsi_overbought, rsi_oversold,
+                   macd_fast, macd_slow, macd_signal,
+                   bb_period, bb_std_dev,
+                   grid_lower_price, grid_upper_price, grid_num_grids, grid_investment_per_grid,
+                   stop_loss_pct, take_profit_pct, position_size_pct,
+                   created_at::text as created_at
+            FROM strategies
+            WHERE user_id = %s
             ORDER BY created_at DESC
-        """, (current_user[0],))  # current_user[0] is user_id
+        """, (current_user['id'],))
 
-        rows = cursor.fetchall()
-        strategies = []
-
-        for row in rows:
-            strategy = dict(row)
-            strategies.append(strategy)
+        strategies = cursor.fetchall()
+        cursor.close()
 
         return strategies
 
@@ -123,21 +127,31 @@ async def get_strategies(
 async def get_strategy(
     strategy_id: int,
     current_user = Depends(get_current_user),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Get single strategy by ID"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
-            SELECT * FROM strategies
-            WHERE id = ? AND user_id = ?
-        """, (strategy_id, current_user[0]))
+            SELECT id, user_id, name, description, strategy_type, initial_capital,
+                   short_period, long_period,
+                   rsi_period, rsi_overbought, rsi_oversold,
+                   macd_fast, macd_slow, macd_signal,
+                   bb_period, bb_std_dev,
+                   grid_lower_price, grid_upper_price, grid_num_grids, grid_investment_per_grid,
+                   stop_loss_pct, take_profit_pct, position_size_pct,
+                   created_at::text as created_at
+            FROM strategies
+            WHERE id = %s AND user_id = %s
+        """, (strategy_id, current_user['id']))
+
         row = cursor.fetchone()
+        cursor.close()
 
         if not row:
             raise HTTPException(status_code=404, detail="Strategy not found")
 
-        return dict(row)
+        return row
 
     except HTTPException:
         raise
@@ -149,11 +163,11 @@ async def get_strategy(
 async def create_strategy(
     strategy: StrategyCreate,
     current_user = Depends(get_current_user),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Create new strategy for current user"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             INSERT INTO strategies (
                 user_id,
@@ -164,9 +178,17 @@ async def create_strategy(
                 bb_period, bb_std_dev,
                 grid_lower_price, grid_upper_price, grid_num_grids, grid_investment_per_grid,
                 stop_loss_pct, take_profit_pct, position_size_pct
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, user_id, name, description, strategy_type, initial_capital,
+                      short_period, long_period,
+                      rsi_period, rsi_overbought, rsi_oversold,
+                      macd_fast, macd_slow, macd_signal,
+                      bb_period, bb_std_dev,
+                      grid_lower_price, grid_upper_price, grid_num_grids, grid_investment_per_grid,
+                      stop_loss_pct, take_profit_pct, position_size_pct,
+                      created_at::text as created_at
         """, (
-            current_user[0],  # user_id
+            current_user['id'],
             strategy.name, strategy.description, strategy.strategy_type, strategy.initial_capital,
             strategy.short_period, strategy.long_period,
             strategy.rsi_period, strategy.rsi_overbought, strategy.rsi_oversold,
@@ -176,14 +198,11 @@ async def create_strategy(
             strategy.stop_loss_pct, strategy.take_profit_pct, strategy.position_size_pct
         ))
 
-        strategy_id = cursor.lastrowid
+        new_strategy = cursor.fetchone()
+        cursor.close()
         db.commit()
 
-        # Fetch created strategy
-        cursor.execute("SELECT * FROM strategies WHERE id = ?", (strategy_id,))
-        row = cursor.fetchone()
-
-        return dict(row)
+        return new_strategy
 
     except Exception as e:
         db.rollback()
@@ -195,32 +214,41 @@ async def update_strategy(
     strategy_id: int,
     strategy: StrategyCreate,
     current_user = Depends(get_current_user),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Update existing strategy"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
 
         # Check if strategy exists and belongs to user
         cursor.execute("""
             SELECT id FROM strategies
-            WHERE id = ? AND user_id = ?
-        """, (strategy_id, current_user[0]))
+            WHERE id = %s AND user_id = %s
+        """, (strategy_id, current_user['id']))
         if not cursor.fetchone():
+            cursor.close()
             raise HTTPException(status_code=404, detail="Strategy not found")
 
         # Update strategy
         cursor.execute("""
             UPDATE strategies SET
-                name = ?, description = ?, strategy_type = ?, initial_capital = ?,
-                short_period = ?, long_period = ?,
-                rsi_period = ?, rsi_overbought = ?, rsi_oversold = ?,
-                macd_fast = ?, macd_slow = ?, macd_signal = ?,
-                bb_period = ?, bb_std_dev = ?,
-                grid_lower_price = ?, grid_upper_price = ?, grid_num_grids = ?, grid_investment_per_grid = ?,
-                stop_loss_pct = ?, take_profit_pct = ?, position_size_pct = ?,
+                name = %s, description = %s, strategy_type = %s, initial_capital = %s,
+                short_period = %s, long_period = %s,
+                rsi_period = %s, rsi_overbought = %s, rsi_oversold = %s,
+                macd_fast = %s, macd_slow = %s, macd_signal = %s,
+                bb_period = %s, bb_std_dev = %s,
+                grid_lower_price = %s, grid_upper_price = %s, grid_num_grids = %s, grid_investment_per_grid = %s,
+                stop_loss_pct = %s, take_profit_pct = %s, position_size_pct = %s,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            WHERE id = %s
+            RETURNING id, user_id, name, description, strategy_type, initial_capital,
+                      short_period, long_period,
+                      rsi_period, rsi_overbought, rsi_oversold,
+                      macd_fast, macd_slow, macd_signal,
+                      bb_period, bb_std_dev,
+                      grid_lower_price, grid_upper_price, grid_num_grids, grid_investment_per_grid,
+                      stop_loss_pct, take_profit_pct, position_size_pct,
+                      created_at::text as created_at
         """, (
             strategy.name, strategy.description, strategy.strategy_type, strategy.initial_capital,
             strategy.short_period, strategy.long_period,
@@ -232,13 +260,11 @@ async def update_strategy(
             strategy_id
         ))
 
+        updated_strategy = cursor.fetchone()
+        cursor.close()
         db.commit()
 
-        # Fetch updated strategy
-        cursor.execute("SELECT * FROM strategies WHERE id = ?", (strategy_id,))
-        row = cursor.fetchone()
-
-        return dict(row)
+        return updated_strategy
 
     except HTTPException:
         raise
@@ -251,22 +277,24 @@ async def update_strategy(
 async def delete_strategy(
     strategy_id: int,
     current_user = Depends(get_current_user),
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Delete strategy"""
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
 
         # Check if strategy exists and belongs to user
         cursor.execute("""
             SELECT id FROM strategies
-            WHERE id = ? AND user_id = ?
-        """, (strategy_id, current_user[0]))
+            WHERE id = %s AND user_id = %s
+        """, (strategy_id, current_user['id']))
         if not cursor.fetchone():
+            cursor.close()
             raise HTTPException(status_code=404, detail="Strategy not found")
 
         # Delete strategy
-        cursor.execute("DELETE FROM strategies WHERE id = ?", (strategy_id,))
+        cursor.execute("DELETE FROM strategies WHERE id = %s", (strategy_id,))
+        cursor.close()
         db.commit()
 
         return {"success": True, "message": "Strategy deleted successfully"}

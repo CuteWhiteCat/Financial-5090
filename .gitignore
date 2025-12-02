@@ -69,9 +69,6 @@ logs/
 *.sqlite
 *.sqlite3
 
-# Docker
-.dockerignore
-
 # OS
 .DS_Store
 Thumbs.db
@@ -83,19 +80,6 @@ Thumbs.db
 *.bak
 *.backup
 *.old
-
-# Alembic
-alembic/versions/*.pyc
-
-# Redis dump
-dump.rdb
-
-# PgAdmin
-pgadmin_data/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
 
 # Coverage
 .coverage.*

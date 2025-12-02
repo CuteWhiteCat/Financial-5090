@@ -2,9 +2,17 @@
 應用程式配置設定
 使用 pydantic-settings 管理環境變數
 """
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import List
-import os
+
+APP_DIR = Path(__file__).resolve().parent.parent
+BACKEND_DIR = APP_DIR.parent
+PROJECT_ROOT = BACKEND_DIR.parent
+ENV_FILE_CANDIDATES = [
+    BACKEND_DIR / ".env",
+    PROJECT_ROOT / ".env",
+]
 
 
 class Settings(BaseSettings):
@@ -18,9 +26,6 @@ class Settings(BaseSettings):
     # 資料庫設定
     DATABASE_URL: str = "postgresql://postgres:postgres123@localhost:5432/trading_simulator"
 
-    # Redis 設定
-    REDIS_URL: str = "redis://localhost:6379/0"
-
     # JWT 設定
     JWT_SECRET: str = "your-super-secret-jwt-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
@@ -33,10 +38,6 @@ class Settings(BaseSettings):
         "http://localhost:3001",
         "http://127.0.0.1:3000"
     ]
-
-    # Celery 設定
-    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
     # 股票資料設定
     STOCK_DATA_CACHE_TTL: int = 86400  # 24小時
@@ -53,7 +54,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_HOUR: int = 1000
 
     class Config:
-        env_file = ".env"
+        env_file = [
+            str(path) for path in ENV_FILE_CANDIDATES if path.exists()
+        ] or [str(path) for path in ENV_FILE_CANDIDATES]
         case_sensitive = True
 
 

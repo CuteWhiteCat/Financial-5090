@@ -4,8 +4,16 @@
 """
 from datetime import datetime, timedelta
 from typing import Optional
+import bcrypt
 from passlib.context import CryptContext
 from jose import JWTError, jwt
+
+# Passlib expects bcrypt.__about__.__version__ (removed in bcrypt>=4.1), so shim it.
+if not hasattr(bcrypt, "__about__"):
+    class _BcryptAbout:
+        __version__ = getattr(bcrypt, "__version__", "unknown")
+
+    bcrypt.__about__ = _BcryptAbout()
 
 # 密碼哈希配置
 # Note: bcrypt automatically truncates passwords >72 bytes as of bcrypt 4.1+

@@ -4,7 +4,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
-import sqlite3
+from psycopg2.extras import RealDictCursor
 import pandas as pd
 from datetime import datetime
 
@@ -51,7 +51,7 @@ class BacktestRequest(BaseModel):
 @router.post("/run")
 async def run_backtest(
     request: BacktestRequest,
-    db: sqlite3.Connection = Depends(get_db)
+    db = Depends(get_db)
 ):
     """執行回測"""
     try:
@@ -65,15 +65,16 @@ async def run_backtest(
 
         # 步驟 1: 從資料庫獲取資料
         print(f"\nStep 1: Check database...")
-        cursor = db.cursor()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
-            SELECT date, open, high, low, close, volume
+            SELECT date::text as date, open, high, low, close, volume
             FROM stock_prices
-            WHERE symbol = ? AND date >= ? AND date <= ?
+            WHERE symbol = %s AND date >= %s AND date <= %s
             ORDER BY date ASC
         """, (request.symbol, request.start_date, request.end_date))
 
         rows = cursor.fetchall()
+        cursor.close()
         print(f"   Found {len(rows)} records in database")
 
         # 步驟 2: 如果資料不足，爬取新資料
@@ -95,7 +96,12 @@ async def run_backtest(
         else:
             print(f"   Using existing database data")
             # 將資料庫資料轉換為 DataFrame
-            df = pd.DataFrame(rows, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
+            df = pd.DataFrame(rows)
+            # 轉換數值欄位為 float，避免 Decimal 與 float 混算錯誤
+            numeric_cols = ['open', 'high', 'low', 'close', 'volume']
+            for col in numeric_cols:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
 
         # 步驟 3: 執行回測
         print(f"\nStep 3: Running backtest strategy...")

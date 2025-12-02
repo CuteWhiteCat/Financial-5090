@@ -113,12 +113,27 @@ class StockCrawler:
             cursor = conn.cursor()
             count = 0
 
+            # 確保 stocks 表中已有該股票，避免外鍵限制觸發
+            cursor.execute("""
+                INSERT INTO stocks (symbol, name, exchange, industry, sector)
+                VALUES (%s, %s, 'TWSE', 'Unknown', 'Unknown')
+                ON CONFLICT (symbol) DO NOTHING
+            """, (symbol, symbol))
+
             for _, row in df.iterrows():
                 try:
+                    cursor.execute("SAVEPOINT price_insert")
                     cursor.execute("""
-                        INSERT OR REPLACE INTO stock_prices
+                        INSERT INTO stock_prices
                         (symbol, date, open, high, low, close, volume)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (symbol, date)
+                        DO UPDATE SET
+                            open = EXCLUDED.open,
+                            high = EXCLUDED.high,
+                            low = EXCLUDED.low,
+                            close = EXCLUDED.close,
+                            volume = EXCLUDED.volume
                     """, (
                         symbol,
                         row['date'],
@@ -128,8 +143,10 @@ class StockCrawler:
                         float(row['close']),
                         int(row['volume'])
                     ))
+                    cursor.execute("RELEASE SAVEPOINT price_insert")
                     count += 1
                 except Exception as e:
+                    cursor.execute("ROLLBACK TO SAVEPOINT price_insert")
                     print(f"WARNING: Insert failed for {row['date']}: {str(e)}")
                     continue
 

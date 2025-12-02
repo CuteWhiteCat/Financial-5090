@@ -14,6 +14,7 @@
 ## 技術架構
 
 ### 前端
+
 - **框架**: React 18 + TypeScript
 - **UI 庫**: Material-UI v5 (支援 Dark Theme)
 - **圖表**: TradingView Lightweight Charts
@@ -21,12 +22,10 @@
 - **動畫**: Framer Motion
 
 ### 後端
+
 - **框架**: FastAPI (Python 3.11+)
-- **ORM**: SQLAlchemy 2.0 (async)
 - **資料庫**: PostgreSQL 15
-- **快取**: Redis
-- **任務隊列**: Celery
-- **資料分析**: pandas, numpy, ta-lib
+- **資料分析**: pandas, numpy, yfinance
 
 ## 專案結構
 
@@ -40,10 +39,8 @@ trading-strategy-simulator/
 │   │   ├── schemas/        # Pydantic schemas
 │   │   ├── services/       # 業務邏輯
 │   │   └── utils/          # 工具函數
-│   ├── alembic/            # 資料庫遷移
 │   ├── tests/              # 測試
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── requirements.txt
 ├── frontend/               # 前端程式碼
 │   ├── src/
 │   │   ├── components/    # React 組件
@@ -52,12 +49,10 @@ trading-strategy-simulator/
 │   │   ├── hooks/         # 自定義 Hooks
 │   │   └── contexts/      # Context Providers
 │   ├── public/
-│   ├── package.json
-│   └── Dockerfile
+│   └── package.json
 ├── docs/                  # 文檔
 ├── database.md           # 資料庫設計文件
 ├── CLAUDE.md             # 專案需求文件
-├── docker-compose.yml    # Docker 編排
 └── README.md             # 本文件
 ```
 
@@ -65,92 +60,105 @@ trading-strategy-simulator/
 
 ### 環境需求
 
-- Docker & Docker Compose
-- Node.js 18+ (本地開發)
-- Python 3.11+ (本地開發)
-- PostgreSQL 15+ (本地開發)
+- Node.js 18+
+- Python 3.11+
+- PostgreSQL 15+
 
-### 使用 Docker (推薦)
+### PostgreSQL 設置
 
-1. Clone 專案
+#### 1. 安裝 PostgreSQL
+
+**Windows:**
+
+- 下載並安裝 [PostgreSQL](https://www.postgresql.org/download/windows/)
+- 安裝時記下設置的 postgres 用戶密碼
+
+**Linux:**
+
 ```bash
-git clone <repository-url>
-cd trading-strategy-simulator
+sudo apt update
+sudo apt install postgresql postgresql-contrib
 ```
 
-2. 設定環境變數
+**macOS:**
+
 ```bash
-cp .env.example .env
-# 編輯 .env 檔案,設定必要的環境變數
+brew install postgresql@15
+brew services start postgresql@15
 ```
 
-3. 啟動所有服務
+#### 2. 創建資料庫
+
 ```bash
-docker-compose up -d
+# 切換到 postgres 用戶（Linux/macOS）
+sudo -u postgres psql
+
+# 或直接使用 psql（Windows/已設置的系統）
+psql -U postgres
+
+# 在 psql 中執行：
+CREATE DATABASE trading_simulator;
+CREATE USER trading_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE trading_simulator TO trading_user;
+\q
 ```
 
-4. 初始化資料庫
-```bash
-docker-compose exec backend alembic upgrade head
-docker-compose exec backend python scripts/init_stocks.py
-```
+#### 3. 設置環境變數
 
-5. 訪問應用
-- 前端: http://localhost:3000
-- 後端 API: http://localhost:8000
-- API 文檔: http://localhost:8000/docs
-
-### 本地開發
-
-#### 後端
+建立 `backend/.env` 檔案：
 
 ```bash
 cd backend
-
-# 建立虛擬環境
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 安裝依賴
-pip install -r requirements.txt
-
-# 設定環境變數
-export DATABASE_URL="postgresql://user:password@localhost:5432/trading_db"
-export REDIS_URL="redis://localhost:6379"
-
-# 執行資料庫遷移
-alembic upgrade head
-
-# 啟動開發伺服器
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cp .env.example .env
+# 編輯 .env 設置你的資料庫連接資訊
 ```
 
-#### 前端
+最少需要設置以下變數：
+
+```env
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/trading_simulator
+JWT_SECRET=your-super-secret-jwt-key-change-this-to-random-string
+```
+
+其他配置已有預設值，可依需求調整。
+
+### 開始使用
+
+#### 啟動
 
 ```bash
+# 1) 後端：啟動 API 伺服器
+cd backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 2) 前端：啟動前端開發伺服器（開新終端）
 cd frontend
-
-# 安裝依賴
 npm install
-
-# 啟動開發伺服器
 npm start
 ```
+
+完成後端與前端都啟動後，瀏覽器前往 http://localhost:3000 使用介面。
 
 ## 主要功能
 
 ### 1. 用戶系統
+
 - 用戶註冊與登入
 - JWT 認證
 - 個人資料管理
 
 ### 2. 策略管理
+
 - 建立自定義交易策略
 - 支援多種技術指標
 - 策略參數調整
 - 策略保存與分享
 
 ### 3. 回測分析
+
 - 選擇台灣熱門股票
 - 設定回測時間範圍
 - 設定初始資金
@@ -158,6 +166,7 @@ npm start
 - 執行回測計算
 
 ### 4. 結果視覺化
+
 - 專業 K 線圖表
 - 策略買賣點標記
 - 買入持有策略對比
@@ -165,6 +174,7 @@ npm start
 - 詳細交易記錄
 
 ### 5. 績效指標
+
 - 總報酬率
 - 年化報酬率
 - 夏普比率
@@ -175,10 +185,12 @@ npm start
 ## API 文檔
 
 完整的 API 文檔可在啟動後端服務後訪問：
+
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
 主要端點：
+
 - `POST /api/auth/register` - 用戶註冊
 - `POST /api/auth/login` - 用戶登入
 - `GET /api/strategies` - 取得策略列表
@@ -191,6 +203,7 @@ npm start
 詳細的資料庫設計請參考 [database.md](./database.md)
 
 主要資料表：
+
 - `users` - 用戶資料
 - `strategies` - 交易策略
 - `stocks` - 股票資訊
@@ -201,13 +214,132 @@ npm start
 
 ## 測試
 
-### 後端測試
-```bash
-cd backend
-pytest tests/ -v --cov=app
+本專案包含完整的測試套件，涵蓋單元測試、集成測試和 API 測試。
+
+### 📁 測試結構
+
+```
+backend/tests/
+├── conftest.py          # Pytest 配置和共享 fixtures
+├── unit/                # 單元測試
+│   ├── test_security.py         # 安全功能測試
+│   └── test_stock_crawler.py    # 股票爬蟲測試
+├── integration/         # 集成測試
+│   └── test_database.py         # 資料庫測試
+└── api/                 # API 端點測試
+    ├── test_auth_api.py         # 認證 API
+    ├── test_stocks_api.py       # 股票 API
+    ├── test_strategies_api.py   # 策略 API
+    └── test_backtest_api.py     # 回測 API
 ```
 
+### 🚀 運行測試
+
+#### 安裝測試依賴
+
+```bash
+cd backend
+pip install pytest pytest-cov pytest-html
+```
+
+#### 運行所有測試
+
+```bash
+# 運行所有測試
+pytest
+
+# 運行並顯示詳細輸出
+pytest -v
+
+# 運行並顯示 print 輸出
+pytest -v -s
+```
+
+#### 運行特定類型的測試
+
+```bash
+# 單元測試
+pytest tests/unit/ -v
+
+# API 測試
+pytest tests/api/ -v
+
+# 集成測試
+pytest tests/integration/ -v
+```
+
+#### 運行特定測試文件
+
+```bash
+# 認證測試
+pytest tests/api/test_auth_api.py -v
+
+# 安全功能測試
+pytest tests/unit/test_security.py -v
+```
+
+### 📊 測試覆蓋率
+
+生成覆蓋率報告：
+
+```bash
+# 生成覆蓋率報告
+pytest --cov=app --cov-report=html --cov-report=term
+
+# 查看 HTML 報告
+# 打開 htmlcov/index.html
+```
+
+### 📝 測試報告
+
+生成 HTML 測試報告：
+
+```bash
+pytest --html=report.html --self-contained-html
+```
+
+### 🧪 測試範例
+
+#### 單元測試範例
+
+```python
+def test_password_hash_generation():
+    """測試密碼哈希生成"""
+    password = "TestPassword123!"
+    hashed = get_password_hash(password)
+    assert hashed != password
+    assert hashed.startswith("$2b$")
+```
+
+#### API 測試範例
+
+```python
+def test_login_success(client, test_user_data):
+    """測試成功登入"""
+    # 註冊
+    client.post("/api/auth/register", json=test_user_data)
+
+    # 登入
+    response = client.post("/api/auth/login", data={
+        "username": test_user_data["username"],
+        "password": test_user_data["password"]
+    })
+
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+```
+
+### 📚 詳細文檔
+
+每個測試目錄都包含詳細的 README 說明：
+
+- [測試總覽](backend/tests/README.md)
+- [單元測試說明](backend/tests/unit/README.md)
+- [API 測試說明](backend/tests/api/README.md)
+- [集成測試說明](backend/tests/integration/README.md)
+
 ### 前端測試
+
 ```bash
 cd frontend
 npm test
@@ -216,38 +348,41 @@ npm run test:coverage
 
 ## 部署
 
-### Docker Compose 部署
-
-生產環境建議使用 Docker Compose：
-
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
-
 ### 環境變數
 
-重要的環境變數：
+最重要的環境變數（必須設置）：
+
 ```env
-# 資料庫
-DATABASE_URL=postgresql://user:password@postgres:5432/trading_db
-POSTGRES_DB=trading_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_secure_password
+# 資料庫連接
+DATABASE_URL=postgresql://postgres:password@localhost:5432/trading_simulator
 
-# Redis
-REDIS_URL=redis://redis:6379
-
-# JWT
+# JWT 密鑰（建議使用隨機生成的密鑰）
 JWT_SECRET=your_jwt_secret_key
+```
+
+其他可選配置（已有預設值）：
+
+```env
+# JWT 配置
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# CORS
-ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+# CORS 允許的來源
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 
-# API Keys (optional)
-FINNHUB_API_KEY=your_api_key
+# 股票資料配置
+STOCK_DATA_CACHE_TTL=86400
+MAX_BACKTEST_YEARS=10
+DEFAULT_INITIAL_CAPITAL=100000
+
+# 效能設定
+MAX_WORKERS=4
+DB_POOL_SIZE=10
+DB_MAX_OVERFLOW=20
 ```
+
+完整的配置範例請參考 `backend/.env.example`
 
 ## 貢獻
 
@@ -268,6 +403,7 @@ MIT License
 ### 支援的台灣股票
 
 預設支援以下熱門股票：
+
 - 2330.TW - 台積電
 - 2317.TW - 鴻海
 - 2454.TW - 聯發科
@@ -284,16 +420,20 @@ MIT License
 ### 支援的策略類型
 
 1. **移動平均線策略 (Moving Average)**
+
    - 金叉死叉
    - 均線多頭排列
 
 2. **RSI 策略**
+
    - 超買超賣
 
 3. **MACD 策略**
+
    - 訊號線交叉
 
 4. **布林通道策略 (Bollinger Bands)**
+
    - 突破上下軌
 
 5. **自定義策略**
@@ -302,11 +442,10 @@ MIT License
 
 ### 效能建議
 
-- 使用 Redis 快取股票資料
 - 定期清理過期的回測記錄
 - 對大量歷史資料使用分區表
-- 使用 Celery 處理耗時的回測任務
 - 啟用資料庫連接池
+- 使用索引優化查詢效能
 
 ### 安全性建議
 
@@ -320,6 +459,7 @@ MIT License
 ### 監控與日誌
 
 建議整合：
+
 - Prometheus + Grafana (效能監控)
 - ELK Stack (日誌分析)
 - Sentry (錯誤追蹤)
@@ -327,6 +467,7 @@ MIT License
 ### 擴展性
 
 系統設計考慮了以下擴展可能：
+
 - 支援更多市場（美股、港股等）
 - 加入機器學習策略
 - 即時交易模擬

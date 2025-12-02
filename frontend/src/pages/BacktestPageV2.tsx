@@ -42,7 +42,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Scatter,
   ReferenceLine,
   Cell,
   ReferenceDot,
@@ -188,37 +187,6 @@ const BacktestPageV2: React.FC = () => {
     });
   };
 
-  // 準備買賣信號數據
-  const prepareSignalData = () => {
-    if (!results || !results.trades || results.trades.length === 0) {
-      return { buySignals: [], sellSignals: [] };
-    }
-
-    const buySignals: any[] = [];
-    const sellSignals: any[] = [];
-
-    results.trades.forEach((trade) => {
-      const dateIndex = results.dates.indexOf(trade.date);
-      if (dateIndex !== -1 && trade.price) {
-        const signalData = {
-          date: trade.date.substring(5),
-          fullDate: trade.date,
-          price: trade.price,
-          shares: trade.shares,
-          signal: trade.signal,
-        };
-
-        if (trade.action === 'BUY') {
-          buySignals.push(signalData);
-        } else if (trade.action === 'SELL') {
-          sellSignals.push(signalData);
-        }
-      }
-    });
-
-    return { buySignals, sellSignals };
-  };
-
   // 判斷策略績效顏色
   const getPerformanceColor = () => {
     if (!results) return '#8b949e';
@@ -240,20 +208,6 @@ const BacktestPageV2: React.FC = () => {
 
   // 判斷策略是否跑贏持有
   const isStrategyWinning = results && results.total_return > results.buy_hold_return;
-
-  // 準備K線圖數據（使用收盤價作為高度基準，通過顏色區分漲跌）
-  const prepareCandlestickData = () => {
-    if (!results) return [];
-    return prepareChartData().map((item) => ({
-      ...item,
-      // 為漲跌分別準備數據
-      upCandle: item.close >= item.open ? item.close : null,
-      downCandle: item.close < item.open ? item.close : null,
-      // 影線數據
-      upperShadow: item.high,
-      lowerShadow: item.low,
-    }));
-  };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>

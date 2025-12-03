@@ -45,7 +45,16 @@
       "Bash(rm:*)",
       "Bash(find:*)",
       "Bash(tree:*)",
+<<<<<<< HEAD
       "Bash(chmod:*)"
+=======
+      "Bash(chmod:*)",
+      "Bash(ipconfig:*)",
+      "Bash(del \"backend\\.env.example\")",
+      "Bash(venvScriptspython.exe -c \"from app.core.config import settings; print(f''DEBUG: {settings.DEBUG}''); print(f''ALLOWED_ORIGINS: {settings.ALLOWED_ORIGINS}'')\")",
+      "Bash(\"venv/Scripts/python.exe\":*)",
+      "Bash(tasklist:*)"
+>>>>>>> e269fdb (fix requirements and compatibility of windows)
     ],
     "deny": [],
     "ask": []

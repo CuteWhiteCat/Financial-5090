@@ -3,7 +3,31 @@
  * 處理所有與後端的通信
  */
 
+<<<<<<< HEAD
 const API_BASE_URL = 'http://localhost:8000';
+=======
+// 自動檢測 API 基礎 URL
+// 優先使用環境變數，否則自動檢測
+const getApiBaseUrl = () => {
+  // 1. 優先使用 .env 中的設定
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+
+  // 2. 自動檢測：根據訪問來源決定後端地址
+  const hostname = window.location.hostname;
+
+  // 如果是 localhost 或 127.0.0.1，使用 localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+
+  // 否則使用當前主機名/IP + 後端端口
+  return `http://${hostname}:8000`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+>>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 // API 錯誤處理
 export class APIError extends Error {

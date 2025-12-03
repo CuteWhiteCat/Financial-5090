@@ -11,17 +11,17 @@ import {
   InputAdornment,
   IconButton,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, ShowChart } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { APIError } from '../services/api';
+import PageHeader from '../components/PageHeader';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
 
   const isValidEmail = (email: string) => {
-    // 實用的 email 格式檢查（基本符號與長度）
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     return emailRegex.test(email);
   };
@@ -107,12 +107,14 @@ const RegisterPage: React.FC = () => {
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          註冊
-        </Typography>
-        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
-          創建帳號以開始使用投資策略模擬工具
-        </Typography>
+        <PageHeader
+          align="center"
+          title="註冊"
+          subtitle="創建帳號以開始使用投資策略模擬工具"
+          icon={<ShowChart />}
+          eyebrow="Trading Strategy Simulator"
+          sx={{ mb: 3 }}
+        />
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

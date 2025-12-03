@@ -16,6 +16,7 @@ import {
   Chip,
 } from '@mui/material';
 import { PlayArrow, ShowChart } from '@mui/icons-material';
+import PageHeader from '../components/PageHeader';
 
 const BacktestPage: React.FC = () => {
   const [selectedStock, setSelectedStock] = useState('2330.TW');
@@ -36,9 +37,12 @@ const BacktestPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        回測執行
-      </Typography>
+      <PageHeader
+        title="回測執行"
+        subtitle="設定標的與策略，開始模擬"
+        icon={<PlayArrow />}
+        eyebrow="Backtest"
+      />
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
         {/* 左側：設定區 */}

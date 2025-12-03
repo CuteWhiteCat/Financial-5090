@@ -17,6 +17,7 @@ import {
   CardContent,
   CardActions,
   IconButton,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -33,8 +34,16 @@ import {
   Delete,
   Add,
   ExpandMore,
+  Timeline,
+  StackedLineChart,
+  QueryStats,
+  DonutLarge,
+  GridView,
+  Savings,
+  CalendarMonth,
 } from '@mui/icons-material';
 import { strategyAPI, Strategy, StrategyCreate } from '../services/api';
+import PageHeader from '../components/PageHeader';
 
 const StrategyPage: React.FC = () => {
   // 策略列表狀態
@@ -215,26 +224,74 @@ const StrategyPage: React.FC = () => {
     grid_trading: '網格交易',
   };
 
+  const strategyMeta: Record<
+    string,
+    { color: string; icon: React.ReactNode; bg: string }
+  > = {
+    moving_average: {
+      color: '#6ab8ff',
+      icon: <Timeline />,
+      bg: 'linear-gradient(135deg, rgba(106,184,255,0.15) 0%, rgba(106,184,255,0.05) 100%)',
+    },
+    rsi: {
+      color: '#f48fb1',
+      icon: <DonutLarge />,
+      bg: 'linear-gradient(135deg, rgba(244,143,177,0.15) 0%, rgba(244,143,177,0.05) 100%)',
+    },
+    macd: {
+      color: '#a5d6a7',
+      icon: <StackedLineChart />,
+      bg: 'linear-gradient(135deg, rgba(165,214,167,0.18) 0%, rgba(165,214,167,0.06) 100%)',
+    },
+    bollinger_bands: {
+      color: '#ffcc80',
+      icon: <QueryStats />,
+      bg: 'linear-gradient(135deg, rgba(255,204,128,0.18) 0%, rgba(255,204,128,0.06) 100%)',
+    },
+    grid_trading: {
+      color: '#9fa8da',
+      icon: <GridView />,
+      bg: 'linear-gradient(135deg, rgba(159,168,218,0.18) 0%, rgba(159,168,218,0.06) 100%)',
+    },
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          策略管理
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleOpenCreate}
-        >
-          創建新策略
-        </Button>
-      </Box>
+    <Container
+      maxWidth="lg"
+      sx={{
+        mt: 4,
+        mb: 4,
+        color: 'white',
+      }}
+    >
+      <PageHeader
+        title="策略管理"
+        subtitle="管理、編輯或建立您的交易策略"
+        icon={<Timeline />}
+        actions={
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleOpenCreate}
+          >
+            創建新策略
+          </Button>
+        }
+      />
 
       {/* 策略列表 */}
       <Grid container spacing={3}>
         {strategies.length === 0 && !loading && (
           <Grid item xs={12}>
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
+            <Paper
+              sx={{
+                p: 4,
+                textAlign: 'center',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
               <Typography variant="h6" color="text.secondary">
                 還沒有保存的策略
               </Typography>
@@ -245,99 +302,128 @@ const StrategyPage: React.FC = () => {
           </Grid>
         )}
 
-        {strategies.map((strategy) => (
-          <Grid item xs={12} md={6} lg={4} key={strategy.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {strategy.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 40 }}>
-                  {strategy.description || '無描述'}
-                </Typography>
-                <Divider sx={{ my: 1 }} />
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2">
-                    <strong>類型:</strong> {strategyTypeNames[strategy.strategy_type] || strategy.strategy_type}
+        {strategies.map((strategy) => {
+          const meta = strategyMeta[strategy.strategy_type] || strategyMeta.moving_average;
+          return (
+            <Grid item xs={12} md={6} lg={4} key={strategy.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  background: meta.bg,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 14px 40px rgba(0,0,0,0.35)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Box>
+                      <Typography variant="h6" fontWeight={700}>
+                        {strategy.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        創建時間：{new Date(strategy.created_at).toLocaleDateString('zh-TW')}
+                      </Typography>
+                    </Box>
+                    <Chip
+                      icon={meta.icon}
+                      label={strategyTypeNames[strategy.strategy_type] || strategy.strategy_type}
+                      sx={{
+                        color: meta.color,
+                        borderColor: meta.color,
+                        bgcolor: 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${meta.color}33`,
+                        fontWeight: 600,
+                        px: 0.45,
+                        '& .MuiChip-icon': {
+                          marginRight: '2px',
+                          color: meta.color,
+                        },
+                      }}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </Box>
+
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 44 }}>
+                    {strategy.description || '無描述'}
                   </Typography>
-                  <Typography variant="body2">
-                    <strong>初始資金:</strong> NT$ {strategy.initial_capital.toLocaleString()}
-                  </Typography>
-                  {strategy.strategy_type === 'moving_average' && (
-                    <>
+                  <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+                  <Box sx={{ mt: 1, display: 'grid', rowGap: 1 }}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Savings fontSize="small" sx={{ color: meta.color }} />
                       <Typography variant="body2">
-                        <strong>短期/長期:</strong> {strategy.short_period}/{strategy.long_period} 天
+                        初始資金：NT$ {strategy.initial_capital.toLocaleString()}
                       </Typography>
-                    </>
-                  )}
-                  {strategy.strategy_type === 'rsi' && (
-                    <>
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <CalendarMonth fontSize="small" sx={{ color: meta.color }} />
                       <Typography variant="body2">
-                        <strong>RSI週期:</strong> {strategy.rsi_period} 天
+                        類型：{strategyTypeNames[strategy.strategy_type] || strategy.strategy_type}
                       </Typography>
+                    </Box>
+                    {strategy.strategy_type === 'moving_average' && (
                       <Typography variant="body2">
-                        <strong>超買/超賣:</strong> {strategy.rsi_overbought}/{strategy.rsi_oversold}
+                        短/長均線：{strategy.short_period}/{strategy.long_period} 天
                       </Typography>
-                    </>
-                  )}
-                  {strategy.strategy_type === 'macd' && (
-                    <>
+                    )}
+                    {strategy.strategy_type === 'rsi' && (
                       <Typography variant="body2">
-                        <strong>快/慢/訊號:</strong> {strategy.macd_fast}/{strategy.macd_slow}/{strategy.macd_signal}
+                        RSI 週期：{strategy.rsi_period} 天，超買/超賣：{strategy.rsi_overbought}/{strategy.rsi_oversold}
                       </Typography>
-                    </>
-                  )}
-                  {strategy.strategy_type === 'bollinger_bands' && (
-                    <>
+                    )}
+                    {strategy.strategy_type === 'macd' && (
                       <Typography variant="body2">
-                        <strong>週期:</strong> {strategy.bb_period} 天
+                        MACD 快/慢/訊號：{strategy.macd_fast}/{strategy.macd_slow}/{strategy.macd_signal}
                       </Typography>
+                    )}
+                    {strategy.strategy_type === 'bollinger_bands' && (
                       <Typography variant="body2">
-                        <strong>標準差:</strong> {strategy.bb_std_dev}
+                        布林週期：{strategy.bb_period} 天，標準差：{strategy.bb_std_dev}
                       </Typography>
-                    </>
-                  )}
-                  {strategy.strategy_type === 'grid_trading' && (
-                    <>
+                    )}
+                    {strategy.strategy_type === 'grid_trading' && (
                       <Typography variant="body2">
-                        <strong>網格數量:</strong> {strategy.grid_num_grids}
+                        網格：{strategy.grid_num_grids} 格；每格 NT$ {strategy.grid_investment_per_grid?.toLocaleString()}
                       </Typography>
-                      <Typography variant="body2">
-                        <strong>每格投資:</strong> NT$ {strategy.grid_investment_per_grid?.toLocaleString()}
-                      </Typography>
-                    </>
-                  )}
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    創建時間: {new Date(strategy.created_at).toLocaleString()}
-                  </Typography>
-                </Box>
-              </CardContent>
-              <CardActions>
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={() => handleOpenEdit(strategy)}
-                >
-                  <Edit />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => handleDeleteStrategy(strategy.id, strategy.name)}
-                >
-                  <Delete />
-                </IconButton>
-                <Button
-                  size="small"
-                  startIcon={<PlayArrow />}
-                  href="/backtest"
-                >
-                  回測
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
+                    )}
+                  </Box>
+                </CardContent>
+                <CardActions sx={{ mt: 'auto', px: 2, pb: 2, pt: 0 }}>
+                  <Button
+                    size="small"
+                    startIcon={<PlayArrow />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: 999,
+                      px: 2.5,
+                    }}
+                    href="/backtest"
+                  >
+                    回測
+                  </Button>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => handleOpenEdit(strategy)}
+                  >
+                    <Edit />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteStrategy(strategy.id, strategy.name)}
+                  >
+                    <Delete />
+                  </IconButton>
+                </CardActions>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
       {/* 創建/編輯對話框 */}

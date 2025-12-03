@@ -12,14 +12,18 @@ import {
   Alert,
 } from '@mui/material';
 import {
-  TrendingUp,
-  AccountBalance,
-  ShowChart,
-  Assessment,
+  Timeline,
+  StackedLineChart,
+  QueryStats,
+  Insights,
+  Refresh,
+  PlayArrow,
+  Addchart,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { strategyAPI, Strategy } from '../services/api';
+import PageHeader from '../components/PageHeader';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -63,28 +67,28 @@ const Dashboard: React.FC = () => {
     {
       title: '總策略數',
       value: strategyCount.toString(),
-      icon: <ShowChart fontSize="large" />,
+      icon: <StackedLineChart fontSize="large" />,
       color: '#90caf9',
       subtitle: '已建立的策略',
     },
     {
       title: '移動平均策略',
       value: strategyTypes.moving_average.toString(),
-      icon: <TrendingUp fontSize="large" />,
+      icon: <Timeline fontSize="large" />,
       color: '#f48fb1',
       subtitle: 'MA策略',
     },
     {
       title: 'RSI策略',
       value: strategyTypes.rsi.toString(),
-      icon: <Assessment fontSize="large" />,
+      icon: <Insights fontSize="large" />,
       color: '#a5d6a7',
       subtitle: '相對強弱指標',
     },
     {
       title: '其他策略',
       value: (strategyTypes.macd + strategyTypes.bollinger_bands + strategyTypes.grid_trading).toString(),
-      icon: <AccountBalance fontSize="large" />,
+      icon: <QueryStats fontSize="large" />,
       color: '#ffcc80',
       subtitle: 'MACD, BB, Grid',
     },
@@ -107,14 +111,12 @@ const Dashboard: React.FC = () => {
         color: 'white',
       }}
     >
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom fontWeight={700}>
-          歡迎回來，{user?.username || '用戶'}！
-        </Typography>
-        <Typography variant="body1" color="rgba(255,255,255,0.7)">
-          這是您的投資策略儀表板
-        </Typography>
-      </Box>
+      <PageHeader
+        title={`歡迎回來，${user?.username || '用戶'}！`}
+        subtitle="這是您的投資策略儀表板"
+        icon={<Insights fontSize="large" />}
+        eyebrow="Dashboard"
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -180,7 +182,7 @@ const Dashboard: React.FC = () => {
               variant="contained"
               fullWidth
               size="large"
-              startIcon={<ShowChart />}
+              startIcon={<Addchart />}
               onClick={() => navigate('/strategy')}
             >
               建立新策略
@@ -191,7 +193,7 @@ const Dashboard: React.FC = () => {
               variant="outlined"
               fullWidth
               size="large"
-              startIcon={<Assessment />}
+              startIcon={<PlayArrow />}
               onClick={() => navigate('/backtest')}
             >
               執行回測
@@ -202,6 +204,7 @@ const Dashboard: React.FC = () => {
               variant="outlined"
               fullWidth
               size="large"
+              startIcon={<Refresh />}
               onClick={loadStrategies}
             >
               刷新數據
@@ -270,14 +273,14 @@ const Dashboard: React.FC = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               開始建立您的第一個策略吧！
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<ShowChart />}
-              onClick={() => navigate('/strategy')}
-              sx={{ mt: 2 }}
-            >
-              建立策略
-            </Button>
+              <Button
+                variant="contained"
+                startIcon={<StackedLineChart />}
+                onClick={() => navigate('/strategy')}
+                sx={{ mt: 2 }}
+              >
+                建立策略
+              </Button>
           </Box>
         )}
       </Paper>

@@ -16,12 +16,6 @@ import {
   Chip,
   Alert,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Divider,
   Link,
   FormControlLabel,
@@ -46,6 +40,7 @@ import {
   Cell,
   ReferenceDot,
 } from 'recharts';
+import PageHeader from '../components/PageHeader';
 
 const BacktestPageV2: React.FC = () => {
   const [stocks, setStocks] = useState<Stock[]>([]);
@@ -209,11 +204,30 @@ const BacktestPageV2: React.FC = () => {
   // 判斷策略是否跑贏持有
   const isStrategyWinning = results && results.total_return > results.buy_hold_return;
 
+  // 回傳明確的表現描述
+  const getPerformanceVerdict = () => {
+    if (!results) {
+      return { label: '尚無結果', detail: '', diff: 0 };
+    }
+    const diff = results.total_return - results.buy_hold_return;
+    if (results.total_return < 0) {
+      return { label: '虧損', detail: '策略為負報酬', diff };
+    }
+    if (results.total_return < results.buy_hold_return) {
+      return { label: '有賺但輸持有', detail: '報酬低於單純持有', diff };
+    }
+    return { label: '跑贏持有', detail: '報酬優於單純持有', diff };
+  };
+  const performanceVerdict = getPerformanceVerdict();
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        回測執行
-      </Typography>
+      <PageHeader
+        title="回測執行"
+        subtitle="選擇策略與標的，跑出績效對比"
+        icon={<PlayArrow />}
+        eyebrow="Backtest Lab"
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
@@ -231,10 +245,10 @@ const BacktestPageV2: React.FC = () => {
 
             {/* 策略選擇 */}
             <FormControl fullWidth sx={{ mt: 2 }} required>
-              <InputLabel>選擇策略 *</InputLabel>
+              <InputLabel>選擇策略</InputLabel>
               <Select
                 value={selectedStrategyId || ''}
-                label="選擇策略 *"
+                label="選擇策略"
                 onChange={(e) => setSelectedStrategyId(e.target.value as number)}
               >
                 {strategies.map((strategy) => (
@@ -363,7 +377,7 @@ const BacktestPageV2: React.FC = () => {
               </Box>
             )}
 
-            <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>
               時間範圍
             </Typography>
             <Grid container spacing={2}>
@@ -531,13 +545,7 @@ const BacktestPageV2: React.FC = () => {
                           </Typography>
                           <Chip
                             size="small"
-                            label={
-                              results.total_return < 0
-                                ? '虧損'
-                                : results.total_return < results.buy_hold_return
-                                  ? '不如持有'
-                                  : '超越持有'
-                            }
+                            label={performanceVerdict.label}
                             sx={{
                               bgcolor: getPerformanceColor(),
                               color: '#fff',
@@ -553,6 +561,9 @@ const BacktestPageV2: React.FC = () => {
                         <Typography variant="body2" sx={{ color: '#c9d1d9' }}>
                           NT$ {results.initial_capital.toLocaleString()} → NT$ {results.final_value.toLocaleString()}
                         </Typography>
+                        <Typography variant="caption" sx={{ color: '#c9d1d9', opacity: 0.8 }}>
+                          相對持有：{performanceVerdict.diff >= 0 ? '+' : ''}{performanceVerdict.diff.toFixed(2)}%
+                        </Typography>
                       </CardContent>
                     </Card>
                   </Grid>
@@ -566,8 +577,11 @@ const BacktestPageV2: React.FC = () => {
                           {results.buy_hold_return >= 0 ? <TrendingUp /> : <TrendingDown />}
                           {results.buy_hold_return.toFixed(2)}%
                         </Typography>
-                        <Typography variant="body2">
-                          {isStrategyWinning ? '策略跑贏持有！' : '策略不如持有'}
+                        <Typography variant="body2" sx={{ color: isStrategyWinning ? '#3fb950' : '#ffa657', fontWeight: 600 }}>
+                          {isStrategyWinning ? '策略跑贏持有' : '策略不如持有'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {performanceVerdict.detail}
                         </Typography>
                       </CardContent>
                     </Card>
@@ -1081,44 +1095,77 @@ const BacktestPageV2: React.FC = () => {
               </Paper>
 
               {/* 交易記錄 */}
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  交易記錄 ({results.total_trades} 筆)
-                </Typography>
-                <TableContainer sx={{ mt: 2, maxHeight: 400 }}>
-                  <Table stickyHeader size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>日期</TableCell>
-                        <TableCell>動作</TableCell>
-                        <TableCell align="right">價格</TableCell>
-                        <TableCell align="right">股數</TableCell>
-                        <TableCell align="right">金額</TableCell>
-                        <TableCell>訊號</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {results.trades.map((trade, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>{trade.date}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={trade.action}
-                              color={trade.action === 'BUY' ? 'success' : 'error'}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="right">NT$ {trade.price.toFixed(2)}</TableCell>
-                          <TableCell align="right">{trade.shares}</TableCell>
-                          <TableCell align="right">NT$ {trade.amount.toLocaleString()}</TableCell>
-                          <TableCell>
-                            <Typography variant="caption">{trade.signal}</Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+              <Paper
+                sx={{
+                  p: 3,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6" fontWeight={700}>
+                    交易記錄 ({results.total_trades} 筆)
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    依日期排序，買賣分色
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 1.5,
+                    maxHeight: 480,
+                    overflow: 'auto',
+                    pr: 0.5,
+                  }}
+                >
+                  {results.trades.map((trade, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        background:
+                          trade.action === 'BUY'
+                            ? 'linear-gradient(135deg, rgba(63,185,80,0.15), rgba(63,185,80,0.05))'
+                            : 'linear-gradient(135deg, rgba(248,81,73,0.15), rgba(248,81,73,0.05))',
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1fr auto',
+                        columnGap: 2,
+                        rowGap: 1,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, minHeight: 40 }}>
+                        <Chip
+                          label={trade.action === 'BUY' ? '買入' : '賣出'}
+                          color={trade.action === 'BUY' ? 'success' : 'error'}
+                          size="small"
+                          sx={{ fontWeight: 700 }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>
+                          {trade.date}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {trade.signal || '—'}
+                        </Typography>
+                      </Box>
+                      <Box textAlign="right">
+                        <Typography variant="body2" fontWeight={700}>
+                          NT$ {trade.price.toFixed(2)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {trade.shares} 股 · NT$ {trade.amount.toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
               </Paper>
             </>
           )}

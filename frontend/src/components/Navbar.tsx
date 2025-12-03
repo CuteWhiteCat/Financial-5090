@@ -10,11 +10,11 @@ import {
   Chip,
 } from '@mui/material';
 import {
-  Dashboard,
-  ShowChart,
-  Assessment,
+  SpaceDashboard,
+  StackedLineChart,
+  QueryStats,
   AccountCircle,
-  TrendingUp,
+  Timeline,
   Logout,
   Login,
 } from '@mui/icons-material';
@@ -59,7 +59,7 @@ const Navbar: React.FC = () => {
             mr: 4,
           }}
         >
-          <TrendingUp sx={{ color: 'primary.light' }} />
+          <Timeline sx={{ color: 'primary.light' }} />
           <Typography variant="h6" component="div" sx={{ fontWeight: 700 }}>
             Trading Strategy Simulator
           </Typography>
@@ -68,7 +68,7 @@ const Navbar: React.FC = () => {
         <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
           <Button
             color="inherit"
-            startIcon={<Dashboard />}
+            startIcon={<SpaceDashboard />}
             onClick={() => navigate('/')}
             sx={{ borderRadius: 999, px: 2.4, textTransform: 'none' }}
           >
@@ -78,7 +78,7 @@ const Navbar: React.FC = () => {
             <>
               <Button
                 color="inherit"
-                startIcon={<ShowChart />}
+                startIcon={<StackedLineChart />}
                 onClick={() => navigate('/strategy')}
                 sx={{ borderRadius: 999, px: 2.4, textTransform: 'none' }}
               >
@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
               </Button>
               <Button
                 color="inherit"
-                startIcon={<Assessment />}
+                startIcon={<QueryStats />}
                 onClick={() => navigate('/backtest')}
                 sx={{ borderRadius: 999, px: 2.4, textTransform: 'none' }}
               >

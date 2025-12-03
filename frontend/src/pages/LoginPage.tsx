@@ -12,9 +12,10 @@ import {
   IconButton,
   Divider,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, ShowChart } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import PageHeader from '../components/PageHeader';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -83,14 +84,15 @@ const LoginPage: React.FC = () => {
             color: 'white',
           }}
         >
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="overline" color="primary.light" sx={{ letterSpacing: 2 }}>
-              Trading Strategy Simulator
-            </Typography>
-            <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
-              歡迎回來
-            </Typography>
-          </Box>
+          <PageHeader
+            eyebrow="Trading Strategy Simulator"
+            title="歡迎回來"
+            subtitle="登入以管理您的策略與回測"
+            icon={<ShowChart />}
+            align="center"
+            tone="light-on-dark"
+            sx={{ mb: 2.5 }}
+          />
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

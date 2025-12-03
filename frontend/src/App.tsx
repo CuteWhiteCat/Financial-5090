@@ -22,7 +22,33 @@ const darkTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 16,
+          textTransform: 'none',
+          fontWeight: 700,
+          letterSpacing: 0.2,
+          transition: 'transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border 180ms ease',
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
+          '&:hover': {
+            transform: 'translateY(-1px) scale(1.01)',
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.22)',
+            boxShadow: '0 12px 28px rgba(0,0,0,0.25)',
+          },
+          '&:active': {
+            transform: 'scale(0.99)',
+            boxShadow: '0 3px 12px rgba(0,0,0,0.22)',
+          },
+        },
+        containedPrimary: {
+          background: 'linear-gradient(120deg, rgba(106,184,255,0.7), rgba(79,143,217,0.7))',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 10px 26px rgba(74,144,226,0.2)',
+          '&:hover': {
+            background: 'linear-gradient(120deg, rgba(121,195,255,0.8), rgba(92,164,245,0.8))',
+          },
         },
       },
     },

@@ -6,7 +6,7 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import StrategyPage from './pages/StrategyPage';
-import BacktestPageV2 from './pages/BacktestPageV2';
+import BacktestPage from './pages/BacktestPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -103,7 +103,7 @@ function App() {
                 path="/backtest"
                 element={
                   <ProtectedRoute>
-                    <BacktestPageV2 />
+                    <BacktestPage />
                   </ProtectedRoute>
                 }
               />

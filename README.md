@@ -64,11 +64,6 @@ trading-strategy-simulator/
 - Python 3.11+
 - PostgreSQL 15+
 
-<<<<<<< HEAD
-=======
-> **重要提醒**: 本專案需要 Python 3.10。如果您使用其他版本的 Python,可能會遇到相依套件不相容的問題。
-
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 ### PostgreSQL 設置
 
 #### 1. 安裝 PostgreSQL
@@ -110,35 +105,20 @@ GRANT ALL PRIVILEGES ON DATABASE trading_simulator TO trading_user;
 
 #### 3. 設置環境變數
 
-<<<<<<< HEAD
-建立 `backend/.env` 檔案：
-
-```bash
-cd backend
-=======
 在**專案根目錄**建立 `.env` 檔案：
 
 ```bash
-# 在專案根目錄 (不是 backend 目錄)
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 cp .env.example .env
 # 編輯 .env 設置你的資料庫連接資訊
 ```
 
-<<<<<<< HEAD
-最少需要設置以下變數：
-=======
 **必須設置**的變數：
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 ```env
 DATABASE_URL=postgresql://postgres:your_password@localhost:5432/trading_simulator
 JWT_SECRET=your-super-secret-jwt-key-change-this-to-random-string
 ```
 
-<<<<<<< HEAD
-其他配置已有預設值，可依需求調整。
-=======
 **選用設置** (手機訪問時需要):
 
 ```env
@@ -151,7 +131,6 @@ REACT_APP_API_BASE_URL=
 ```
 
 其他配置已有預設值，可依需求調整。請參考 `.env.example` 查看完整配置選項。
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 ### 開始使用
 
@@ -160,13 +139,8 @@ REACT_APP_API_BASE_URL=
 ```bash
 # 1) 後端：啟動 API 伺服器
 cd backend
-<<<<<<< HEAD
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
-=======
-python -3.11 -m venv venv
-source venv/bin/activate # Windows: venv\Scripts\activate
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 

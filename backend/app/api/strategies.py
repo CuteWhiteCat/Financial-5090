@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from uuid import UUID
 
 from ..core.database import get_db
 from .auth import get_current_user
@@ -53,8 +54,8 @@ class StrategyCreate(BaseModel):
 
 class StrategyResponse(BaseModel):
     """Strategy response model"""
-    id: int
-    user_id: int
+    id: UUID
+    user_id: UUID
     name: str
     description: Optional[str]
     strategy_type: str
@@ -125,7 +126,7 @@ async def get_strategies(
 
 @router.get("/{strategy_id}", response_model=StrategyResponse)
 async def get_strategy(
-    strategy_id: int,
+    strategy_id: UUID,
     current_user = Depends(get_current_user),
     db = Depends(get_db)
 ):
@@ -211,7 +212,7 @@ async def create_strategy(
 
 @router.put("/{strategy_id}", response_model=StrategyResponse)
 async def update_strategy(
-    strategy_id: int,
+    strategy_id: UUID,
     strategy: StrategyCreate,
     current_user = Depends(get_current_user),
     db = Depends(get_db)
@@ -275,7 +276,7 @@ async def update_strategy(
 
 @router.delete("/{strategy_id}")
 async def delete_strategy(
-    strategy_id: int,
+    strategy_id: UUID,
     current_user = Depends(get_current_user),
     db = Depends(get_db)
 ):

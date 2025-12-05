@@ -3,29 +3,18 @@
 使用 pydantic-settings 管理環境變數
 """
 from pathlib import Path
-<<<<<<< HEAD
-from pydantic_settings import BaseSettings
-from typing import List
-=======
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from typing import List, Union
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 APP_DIR = Path(__file__).resolve().parent.parent
 BACKEND_DIR = APP_DIR.parent
 PROJECT_ROOT = BACKEND_DIR.parent
-<<<<<<< HEAD
-ENV_FILE_CANDIDATES = [
-    BACKEND_DIR / ".env",
-    PROJECT_ROOT / ".env",
-=======
 
 # 優先使用專案根目錄的 .env 文件
 ENV_FILE_CANDIDATES = [
     PROJECT_ROOT / ".env",  # 專案根目錄 (優先)
     BACKEND_DIR / ".env",   # backend 目錄 (備用)
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 ]
 
 
@@ -46,14 +35,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-<<<<<<< HEAD
-    # CORS 設定
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000"
-    ]
-=======
     # CORS 設定 (可以是逗號分隔的字串或列表)
     ALLOWED_ORIGINS: Union[str, List[str]] = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000"
 
@@ -65,7 +46,6 @@ class Settings(BaseSettings):
             # 從環境變數讀取的逗號分隔字串
             return [origin.strip() for origin in v.split(',') if origin.strip()]
         return v
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
     # 股票資料設定
     STOCK_DATA_CACHE_TTL: int = 86400  # 24小時
@@ -81,13 +61,6 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_PER_HOUR: int = 1000
 
-<<<<<<< HEAD
-    class Config:
-        env_file = [
-            str(path) for path in ENV_FILE_CANDIDATES if path.exists()
-        ] or [str(path) for path in ENV_FILE_CANDIDATES]
-        case_sensitive = True
-=======
     model_config = SettingsConfigDict(
         env_file=[
             str(path) for path in ENV_FILE_CANDIDATES if path.exists()
@@ -95,7 +68,6 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra='ignore'  # 忽略 .env 中未定義的欄位 (如 REACT_APP_API_BASE_URL)
     )
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 
 # 創建全域設定實例

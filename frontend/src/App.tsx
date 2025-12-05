@@ -9,10 +9,7 @@ import StrategyPage from './pages/StrategyPage';
 import BacktestPage from './pages/BacktestPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-<<<<<<< HEAD
-=======
 import DebugPage from './pages/DebugPage';
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 // 創建深色主題
 const darkTheme = createTheme({
@@ -85,10 +82,7 @@ function App() {
               {/* 公開路由 */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-<<<<<<< HEAD
-=======
               <Route path="/debug" element={<DebugPage />} />
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
               {/* 受保護的路由 */}
               <Route

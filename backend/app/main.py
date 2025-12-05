@@ -11,14 +11,6 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-<<<<<<< HEAD
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
-
-from .core.database import init_db
-=======
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -27,7 +19,6 @@ import logging
 
 from .core.database import init_db
 from .core.config import settings
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 from .api import stocks, backtest, strategies, auth
 
 # Setup logging
@@ -46,22 +37,6 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-<<<<<<< HEAD
-# CORS 設定
-origins = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-=======
 # 自定義 CORS Middleware (在 DEBUG 模式下允許所有來源)
 class CustomCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -98,7 +73,6 @@ else:
         allow_methods=["*"],
         allow_headers=["*"],
     )
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 # Register routes
 app.include_router(auth.router)
@@ -135,8 +109,6 @@ async def health_check():
     }
 
 
-<<<<<<< HEAD
-=======
 @app.get("/debug/cors")
 async def debug_cors():
     """調試 CORS 設定"""
@@ -147,7 +119,6 @@ async def debug_cors():
     }
 
 
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 @app.get("/api/v1/info")
 async def api_info():
     """API 資訊"""

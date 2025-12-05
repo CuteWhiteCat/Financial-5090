@@ -43,30 +43,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         ...sx,
       }}
     >
-<<<<<<< HEAD
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        alignItems={align === 'center' ? 'center' : 'flex-start'}
-        justifyContent="space-between"
-        gap={2}
-        flexWrap="wrap"
-      >
-        <Stack
-          direction="row"
-          spacing={1.5}
-          alignItems="center"
-          sx={{
-            width: { xs: '100%', sm: 'auto' },
-            justifyContent: align === 'center' ? 'center' : 'flex-start',
-          }}
-=======
       {align === 'center' ? (
         // 居中佈局: 所有元素垂直排列並居中
         <Stack
           spacing={2}
           alignItems="center"
           sx={{ width: '100%' }}
->>>>>>> e269fdb (fix requirements and compatibility of windows)
         >
           {icon && (
             <Box
@@ -85,11 +67,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
               {icon}
             </Box>
           )}
-<<<<<<< HEAD
-          <Box sx={{ textAlign: align === 'center' ? 'center' : 'left' }}>
-            {eyebrow && (
-              <Typography variant="overline" sx={{ letterSpacing: 2, color: theme.palette.primary.light }}>
-=======
           <Box sx={{ textAlign: 'center', width: '100%' }}>
             {eyebrow && (
               <Typography variant="overline" sx={{
@@ -97,7 +74,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                 color: theme.palette.primary.light,
                 display: 'block',
               }}>
->>>>>>> e269fdb (fix requirements and compatibility of windows)
                 {eyebrow}
               </Typography>
             )}
@@ -125,28 +101,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                 background: accent,
                 borderRadius: 999,
                 boxShadow: '0 6px 20px rgba(106,184,255,0.35)',
-<<<<<<< HEAD
-                mx: align === 'center' ? 'auto' : 0,
-              }}
-            />
-          </Box>
-        </Stack>
-
-        {actions && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              width: { xs: '100%', sm: 'auto' },
-              justifyContent: align === 'center' ? 'center' : 'flex-end',
-            }}
-          >
-            {actions}
-          </Box>
-        )}
-      </Stack>
-=======
                 mx: 'auto',
               }}
             />
@@ -237,7 +191,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </Stack>
       )}
->>>>>>> e269fdb (fix requirements and compatibility of windows)
     </Box>
   );
 };

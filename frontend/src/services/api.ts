@@ -3,9 +3,6 @@
  * 處理所有與後端的通信
  */
 
-<<<<<<< HEAD
-const API_BASE_URL = 'http://localhost:8000';
-=======
 // 自動檢測 API 基礎 URL
 // 優先使用環境變數，否則自動檢測
 const getApiBaseUrl = () => {
@@ -27,7 +24,6 @@ const getApiBaseUrl = () => {
 };
 
 const API_BASE_URL = getApiBaseUrl();
->>>>>>> e269fdb (fix requirements and compatibility of windows)
 
 // API 錯誤處理
 export class APIError extends Error {

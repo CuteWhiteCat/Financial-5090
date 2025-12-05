@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip --version:*)",
+      "Bash(py -3.10:*)",
+      "Bash(py --list:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

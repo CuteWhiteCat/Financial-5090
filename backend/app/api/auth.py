@@ -7,7 +7,6 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import timedelta
 from psycopg2.extras import RealDictCursor
-from uuid import UUID
 
 from ..core.database import get_db
 from ..core.security import (
@@ -34,7 +33,7 @@ class UserCreate(BaseModel):
 
 class UserResponse(BaseModel):
     """用戶響應模型"""
-    id: UUID
+    id: int
     username: str
     email: str
     full_name: Optional[str]

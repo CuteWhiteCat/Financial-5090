@@ -77,9 +77,17 @@ async def run_backtest(
         cursor.close()
         print(f"   Found {len(rows)} records in database")
 
-        # 步驟 2: 如果資料不足，爬取新資料
-        if len(rows) < 30:
-            print(f"\nStep 2: Insufficient data, fetching...")
+        # 判斷是否需要補抓資料：資料太少，或請求的日期範圍超出已存區間
+        need_fetch = len(rows) < 30
+        if not need_fetch and rows:
+            dates = [r['date'] for r in rows if 'date' in r]
+            min_date = min(dates)
+            max_date = max(dates)
+            if request.start_date < min_date or request.end_date > max_date:
+                need_fetch = True
+
+        if need_fetch:
+            print(f"\nStep 2: Fetching requested range...")
             df = StockCrawler.fetch_stock_data(
                 request.symbol,
                 request.start_date,
@@ -89,10 +97,9 @@ async def run_backtest(
             if df is None or df.empty:
                 raise HTTPException(status_code=404, detail="無法獲取股票資料")
 
-            # 存入資料庫
+            # 存入資料庫（有缺口就補齊）
             saved_count = StockCrawler.save_to_db(db, request.symbol, df)
             print(f"   Saved {saved_count} records")
-
         else:
             print(f"   Using existing database data")
             # 將資料庫資料轉換為 DataFrame

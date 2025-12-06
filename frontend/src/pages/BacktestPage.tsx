@@ -41,11 +41,16 @@ import {
   ReferenceDot,
 } from 'recharts';
 import PageHeader from '../components/PageHeader';
+import { useLocation } from 'react-router-dom';
 
 const BacktestPage: React.FC = () => {
+  const location = useLocation();
+  const rawStrategyId = (location.state as { strategyId?: number | string } | null)?.strategyId;
+  const initialStrategyId = rawStrategyId !== undefined && rawStrategyId !== null ? String(rawStrategyId) : null;
+
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
-  const [selectedStrategyId, setSelectedStrategyId] = useState<number | null>(null);
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(initialStrategyId);
 
   const [stockInputMode, setStockInputMode] = useState<'predefined' | 'custom'>('predefined');
   const [selectedStock, setSelectedStock] = useState('2330.TW');
@@ -56,23 +61,35 @@ const BacktestPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<BacktestResults | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
 
   // 載入股票列表和策略
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setDataLoading(true);
         const [stocksData, strategiesData] = await Promise.all([
           stocksAPI.getAll(),
           strategyAPI.getAll(),
         ]);
         setStocks(stocksData);
         setStrategies(strategiesData);
+
+        // 預設帶入從策略頁點擊的策略
+        if (initialStrategyId && !selectedStrategyId) {
+          const exists = strategiesData.find((s) => String(s.id) === initialStrategyId);
+          if (exists) {
+            setSelectedStrategyId(initialStrategyId);
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch data:', err);
+      } finally {
+        setDataLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [initialStrategyId, selectedStrategyId]);
 
   // 執行回測
   const handleRunBacktest = async () => {
@@ -249,7 +266,7 @@ const BacktestPage: React.FC = () => {
               <Select
                 value={selectedStrategyId || ''}
                 label="選擇策略"
-                onChange={(e) => setSelectedStrategyId(e.target.value as number)}
+                onChange={(e) => setSelectedStrategyId(e.target.value as string)}
               >
                 {strategies.map((strategy) => (
                   <MenuItem key={strategy.id} value={strategy.id}>
@@ -264,7 +281,7 @@ const BacktestPage: React.FC = () => {
               </Select>
             </FormControl>
 
-            {strategies.length === 0 && (
+            {!dataLoading && strategies.length === 0 && (
               <Alert severity="warning" sx={{ mt: 1 }}>
                 還沒有保存的策略。
                 <Link href="/strategy" sx={{ ml: 1, color: 'inherit', fontWeight: 'bold' }}>
@@ -272,6 +289,8 @@ const BacktestPage: React.FC = () => {
                 </Link>
               </Alert>
             )}
+
+
 
             <Divider sx={{ my: 2 }} />
 

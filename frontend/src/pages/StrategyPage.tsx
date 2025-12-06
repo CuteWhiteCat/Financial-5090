@@ -42,10 +42,12 @@ import {
   Savings,
   CalendarMonth,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { strategyAPI, Strategy, StrategyCreate } from '../services/api';
 import PageHeader from '../components/PageHeader';
 
 const StrategyPage: React.FC = () => {
+  const navigate = useNavigate();
   // 策略列表狀態
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,7 +102,9 @@ const [sortOrder, setSortOrder] = useState<string>('desc');
       const data = await strategyAPI.getAll(sortBy, sortOrder);
       setStrategies(data);
     } catch (error: any) {
-      showSnackbar('載入策略失敗: ' + error.message, 'error');
+      const errorMsg = error?.message || '未知錯誤';
+      showSnackbar('載入策略失敗: ' + errorMsg, 'error');
+      console.error('Load strategies error:', error);
     } finally {
       setLoading(false);
     }
@@ -194,7 +198,9 @@ const [sortOrder, setSortOrder] = useState<string>('desc');
       handleCloseDialog();
       loadStrategies();
     } catch (error: any) {
-      showSnackbar('保存策略失敗: ' + error.message, 'error');
+      const errorMsg = error?.message || '未知錯誤';
+      showSnackbar('保存策略失敗: ' + errorMsg, 'error');
+      console.error('Save strategy error:', error);
     } finally {
       setLoading(false);
     }
@@ -212,7 +218,9 @@ const [sortOrder, setSortOrder] = useState<string>('desc');
       showSnackbar('策略刪除成功！', 'success');
       loadStrategies();
     } catch (error: any) {
-      showSnackbar('刪除策略失敗: ' + error.message, 'error');
+      const errorMsg = error?.message || '未知錯誤';
+      showSnackbar('刪除策略失敗: ' + errorMsg, 'error');
+      console.error('Delete strategy error:', error);
     } finally {
       setLoading(false);
     }
@@ -431,7 +439,7 @@ const [sortOrder, setSortOrder] = useState<string>('desc');
                       borderRadius: 999,
                       px: 2.5,
                     }}
-                    href="/backtest"
+                    onClick={() => navigate('/backtest', { state: { strategyId: strategy.id } })}
                   >
                     回測
                   </Button>
@@ -501,6 +509,15 @@ const [sortOrder, setSortOrder] = useState<string>('desc');
                   onChange={(e) => setFormData({ ...formData, initial_capital: Number(e.target.value) })}
                   variant="outlined"
                   required
+                  error={formData.initial_capital < 1000 || formData.initial_capital > 100000000}
+                  helperText={
+                    formData.initial_capital < 1000
+                      ? '初始資金不能少於 NT$ 1,000'
+                      : formData.initial_capital > 100000000
+                      ? '初始資金不能超過 NT$ 100,000,000'
+                      : '建議範圍：NT$ 1,000 ~ NT$ 100,000,000'
+                  }
+                  inputProps={{ min: 1000, max: 100000000 }}
                 />
               </Grid>
             </Grid>
@@ -725,7 +742,15 @@ const [sortOrder, setSortOrder] = useState<string>('desc');
                       type="number"
                       value={formData.grid_investment_per_grid}
                       onChange={(e) => setFormData({ ...formData, grid_investment_per_grid: Number(e.target.value) })}
-                      helperText="每個網格的投資額"
+                      error={formData.grid_investment_per_grid < 100 || formData.grid_investment_per_grid > 10000000}
+                      helperText={
+                        formData.grid_investment_per_grid < 100
+                          ? '每格投資金額不能少於 NT$ 100'
+                          : formData.grid_investment_per_grid > 10000000
+                          ? '每格投資金額不能超過 NT$ 10,000,000'
+                          : '建議範圍：NT$ 100 ~ NT$ 10,000,000'
+                      }
+                      inputProps={{ min: 100, max: 10000000 }}
                     />
                   </Grid>
                 </Grid>

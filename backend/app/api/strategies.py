@@ -3,7 +3,7 @@
 Strategy API endpoints - With user authentication
 """
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
@@ -50,6 +50,27 @@ class StrategyCreate(BaseModel):
     stop_loss_pct: Optional[float] = 5.0
     take_profit_pct: Optional[float] = 10.0
     position_size_pct: Optional[float] = 100.0
+
+    @field_validator('initial_capital')
+    @classmethod
+    def validate_initial_capital(cls, v):
+        """驗證初始資金範圍"""
+        if v < 1000:
+            raise ValueError('初始資金不能少於 NT$ 1,000')
+        if v > 100000000:
+            raise ValueError('初始資金不能超過 NT$ 100,000,000')
+        return v
+
+    @field_validator('grid_investment_per_grid')
+    @classmethod
+    def validate_grid_investment(cls, v):
+        """驗證每格投資金額範圍"""
+        if v is not None and v > 0:  # 允許 None 或 0（預設值）
+            if v < 100:
+                raise ValueError('每格投資金額不能少於 NT$ 100')
+            if v > 10000000:
+                raise ValueError('每格投資金額不能超過 NT$ 10,000,000')
+        return v
 
 
 class StrategyResponse(BaseModel):
@@ -230,7 +251,7 @@ async def create_strategy(
 
 @router.put("/{strategy_id}", response_model=StrategyResponse)
 async def update_strategy(
-    strategy_id: int,
+    strategy_id: str,
     strategy: StrategyCreate,
     current_user = Depends(get_current_user),
     db = Depends(get_db)
@@ -294,7 +315,7 @@ async def update_strategy(
 
 @router.delete("/{strategy_id}")
 async def delete_strategy(
-    strategy_id: int,
+    strategy_id: str,
     current_user = Depends(get_current_user),
     db = Depends(get_db)
 ):

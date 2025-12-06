@@ -27,10 +27,31 @@ const API_BASE_URL = getApiBaseUrl();
 
 // API 錯誤處理
 export class APIError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public details?: any) {
     super(message);
     this.name = 'APIError';
   }
+}
+
+// 解析 Pydantic 驗證錯誤
+function parsePydanticError(error: any): string {
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  // 如果是 detail 字符串
+  if (error.detail && typeof error.detail === 'string') {
+    return error.detail;
+  }
+  
+  // 如果是 Pydantic 驗證錯誤陣列
+  if (Array.isArray(error.detail)) {
+    return error.detail
+      .map((err: any) => `${err.loc?.[1] || 'field'}: ${err.msg}`)
+      .join('; ');
+  }
+  
+  return 'API request failed';
 }
 
 // 通用請求函數
@@ -39,18 +60,24 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  // 自動從 localStorage 取得 token
+  const token = localStorage.getItem('auth_token');
+  const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
 
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new APIError(response.status, error.detail || 'API request failed');
+    const message = parsePydanticError(error);
+    throw new APIError(response.status, message, error);
   }
 
   return response.json();

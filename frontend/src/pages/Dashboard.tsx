@@ -258,7 +258,7 @@ const Dashboard: React.FC = () => {
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() => navigate('/backtest')}
+                  onClick={() => navigate('/backtest', { state: { strategyId: strategy.id } })}
                 >
                   執行回測
                 </Button>
